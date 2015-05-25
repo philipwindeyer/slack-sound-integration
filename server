@@ -1,0 +1,93 @@
+#!/bin/bash
+
+readonly DEFAULT_RESOURCE_DIR="/home/ec2-user/sounds"
+
+PID=$(ps -ef | grep sound-server | grep java | head -n 1 | awk '{print $2 }')
+RESOURCE_DIR=
+COMMAND=
+
+function check_root {
+	if [ $USER != "root" ]; then
+		echo "Permission Denied. Run as root (or with sudo)."
+		exit 1
+	fi
+}
+
+function check_args {
+	for arg in "$@"
+	do
+		case $arg in 
+			"start"|"stop"|"restart"|"status")
+				COMMAND=$arg
+			;;
+			*)
+				if [[ $arg == "--resource-dir="* ]]; then
+					RESOURCE_DIR=$(echo $arg | cut -d'=' -f 2)
+				fi
+			;;
+		esac
+	done
+
+	if [ -z $COMMAND ]; then
+		echo "Invalid option. Specify start/stop/restart/status"
+		exit 1
+	fi
+}
+
+function start {
+	check_root
+
+	if [ ! -z $PID ]; then
+		echo "sound-server already running (PID: $PID). Stop this first before attempting to start again"
+		exit 1
+	fi
+
+	if [ -z $RESOURCE_DIR ]; then
+		echo "No resource-dir specified. Using default ($DEFAULT_RESOURCE_DIR)"
+		RESOURCE_DIR=$DEFAULT_RESOURCE_DIR
+	fi
+	
+	echo "Starting sound-server..."
+	nohup java -jar sound-server.jar --resource-dir=$RESOURCE_DIR >sound-server.log 2>&1 &
+}
+
+function stop {
+	check_root
+
+	if [ -z $PID ]; then
+		echo "sound-server process not found. Are you sure it is running?"
+		exit 0
+	else
+		echo "Stopping sound-server..."
+		kill $PID
+	fi
+}
+
+function restart {
+	stop
+	sleep 4
+	PID=
+	start
+}
+
+function status {
+	if [ -z $PID ]; then
+		echo "sound-server is not currently running"
+	else
+		echo "sound-server is running with PID $PID"
+		ps -ef | grep sound-server | grep java | head -n 1
+	fi
+}
+
+check_args "$@"
+
+case $COMMAND in
+	"start") start;;
+	"stop") stop;;
+	"restart") restart;;
+	"status") status;;
+	*) echo "Invalid option.";;
+esac
+
+exit 0
+

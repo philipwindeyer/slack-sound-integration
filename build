@@ -1,0 +1,12 @@
+#!/bin/bash
+
+mvn clean package
+RES_CODE=$?
+
+mv target/sound-server.jar .
+zip sound-server.zip sound-server.jar server
+
+rm sound-server.jar
+
+exit $RES_CODE
+
