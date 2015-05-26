@@ -13,7 +13,7 @@ It is built in Java, using the Spark Micro-web framework (http://sparkjava.com/)
 ## Dependencies:
 - Java 8+ (Spark 2 runs on Java 8+ only)
 - Maven 2+ (uses for distribution builds)
-- bash (use cygwin if on Windows...or buy a real computer)
+- bash (use cygwin if on Windows...or install a real OS)
 - zip (comes on most *nix machines by default)
 
 ## To build:
